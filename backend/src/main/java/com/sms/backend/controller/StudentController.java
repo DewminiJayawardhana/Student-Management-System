@@ -1,6 +1,7 @@
 package com.sms.backend.controller;
 
 import com.sms.backend.model.Student;
+import com.sms.backend.service.StudentCsvService;
 import com.sms.backend.service.StudentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -9,12 +10,19 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+//for csv file
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+
 @RestController
 @RequestMapping("/api/students")
 @RequiredArgsConstructor
 public class StudentController {
 
     private final StudentService studentService;
+
+    private final StudentCsvService csvService;
 
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     @PostMapping
@@ -45,4 +53,15 @@ public class StudentController {
     public void delete(@PathVariable String id) {
         studentService.delete(id);
     }
+    //for csv file
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+@GetMapping("/export")
+public ResponseEntity<String> exportCsv() throws Exception {
+    String csv = csvService.exportToCsv(studentService.getAll());
+
+    return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=students.csv")
+            .contentType(MediaType.parseMediaType("text/csv"))
+            .body(csv);
+}
 }

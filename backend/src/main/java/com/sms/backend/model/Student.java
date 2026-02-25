@@ -1,45 +1,45 @@
 package com.sms.backend.model;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.Instant;
-
-@Document("students")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Document(collection = "students")
 public class Student {
 
     @Id
     private String id;
 
+    private String name;
+
     @Indexed(unique = true)
-    private String studentCode; // STU-2026-0001
+    private String username; // unique
 
-    @NotBlank
-    private String fullName;
+    private int grade;       // 1 - 13
+    private String classRoom; // "A", "B", "C"
 
-    @Email
-    @NotBlank
-    @Indexed(unique = true)
-    private String email;
+    public Student() {}
 
-    @NotBlank
-    private String phone;
+    public Student(String id, String name, String username, int grade, String classRoom) {
+        this.id = id;
+        this.name = name;
+        this.username = username;
+        this.grade = grade;
+        this.classRoom = classRoom;
+    }
 
-    private String address;
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
-    @NotBlank
-    private String grade;
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    private boolean active = true;
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
 
-    private Instant createdAt;
-    private Instant updatedAt;
+    public int getGrade() { return grade; }
+    public void setGrade(int grade) { this.grade = grade; }
+
+    public String getClassRoom() { return classRoom; }
+    public void setClassRoom(String classRoom) { this.classRoom = classRoom; }
 }

@@ -1,58 +1,94 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
-import { AuthProvider } from "./auth/AuthContext";
-import ProtectedRoute from "./auth/ProtectedRoute";
-
-import Navbar from "./components/Navbar";
-import ToastListener from "./components/ToastListener";
-
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Students from "./pages/Students";
-import AuditLogs from "./pages/AuditLogs";
-
-function AppShell({ children }) {
-  return (
-    <div className="min-h-screen bg-[#F5F5F5]">
-      <Navbar />
-      <ToastListener />
-      {children}
-    </div>
-  );
-}
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminPanel from "./pages/admin/AdminPanel";
+import StaffPage from "./pages/admin/StaffPage";
+import StaffGradePage from "./pages/admin/StaffGradePage";
+import StaffTermPage from "./pages/admin/StaffTermPage";
+import StudentListPage from "./pages/admin/StudentListPage";
+import TeacherListPage from "./pages/admin/TeacherListPage";
+import ProtectedRoute from "./components/ProtectedRoute";
+import GradeStudentsPage from "./pages/admin/GradeStudentsPage";
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <ToastContainer position="top-right" autoClose={2500} />
-        <Routes>
-          <Route path="/" element={<Navigate to="/students" replace />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+    <BrowserRouter>
+      <Routes>
+        {/* Login */}
+        <Route path="/login" element={<AdminLogin />} />
 
-          <Route
-            path="/students"
-            element={
-              <ProtectedRoute>
-                <AppShell><Students /></AppShell>
-              </ProtectedRoute>
-            }
-          />
+        {/* Redirect root */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
-          <Route
-            path="/audit-logs"
-            element={
-              <ProtectedRoute>
-                <AppShell><AuditLogs /></AppShell>
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+        {/* Protected Admin Routes */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminPanel />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ✅ Staff routes (NEW) */}
+        <Route
+          path="/admin/staff"
+          element={
+            <ProtectedRoute>
+              <StaffPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/staff/grade/:grade"
+          element={
+            <ProtectedRoute>
+              <StaffGradePage />
+            </ProtectedRoute>
+          }
+        />
+       
+
+        {/* Students */}
+        <Route
+          path="/admin/students"
+          element={
+            <ProtectedRoute>
+              <StudentListPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/students/grade/:grade"
+          element={
+            <ProtectedRoute>
+              <GradeStudentsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+  path="/admin/staff/grade/:grade/:term"
+  element={
+    <ProtectedRoute>
+      <StaffTermPage />
+    </ProtectedRoute>
+  }
+/>
+
+        {/* Teachers */}
+        <Route
+          path="/admin/teachers"
+          element={
+            <ProtectedRoute>
+              <TeacherListPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }

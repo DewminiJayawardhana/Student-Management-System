@@ -6,6 +6,7 @@ import com.sms.backend.model.ChangeLog;
 import com.sms.backend.model.MarkSheet;
 import com.sms.backend.repository.ChangeLogRepository;
 import com.sms.backend.repository.MarkSheetRepository;
+import com.sms.backend.repository.StudentRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -20,10 +21,14 @@ public class MarkSheetController {
 
     private final MarkSheetRepository repo;
     private final ChangeLogRepository historyRepo;
+    private final StudentRepository studentRepo; // ✅ NEW
 
-    public MarkSheetController(MarkSheetRepository repo, ChangeLogRepository historyRepo) {
+    public MarkSheetController(MarkSheetRepository repo,
+                               ChangeLogRepository historyRepo,
+                               StudentRepository studentRepo) {
         this.repo = repo;
         this.historyRepo = historyRepo;
+        this.studentRepo = studentRepo;
     }
 
     private String sheetKey(Integer grade, String classRoom, String term) {
@@ -80,14 +85,15 @@ public class MarkSheetController {
         sheet.setLastUpdatedBy(updatedBy);
         repo.save(sheet);
 
-        // ✅ SAVE HISTORY
+        // ✅ SAVE HISTORY (include teacher/admin username)
+        String actorRole = updatedBy.equalsIgnoreCase("ADMIN") ? "ADMIN" : "TEACHER";
         historyRepo.save(new ChangeLog(
                 updatedBy,
-                updatedBy.equalsIgnoreCase("ADMIN") ? "ADMIN" : "TEACHER",
+                actorRole,
                 "MARK_SHEET",
                 sheetKey(grade, c, t),
                 "ADD_COLUMN",
-                "Added column: " + newName
+                actorRole + " " + updatedBy + " added column: " + newName
         ));
 
         return Map.of("message", "Column added", "key", key);
@@ -119,14 +125,15 @@ public class MarkSheetController {
         sheet.setLastUpdatedBy(actor);
         repo.save(sheet);
 
-        // ✅ SAVE HISTORY
+        // ✅ SAVE HISTORY (include teacher/admin username)
+        String actorRole = actor.equalsIgnoreCase("ADMIN") ? "ADMIN" : "TEACHER";
         historyRepo.save(new ChangeLog(
                 actor,
-                actor.equalsIgnoreCase("ADMIN") ? "ADMIN" : "TEACHER",
+                actorRole,
                 "MARK_SHEET",
                 sheetKey(grade, c, t),
                 "DELETE_COLUMN",
-                "Removed column: " + removedName
+                actorRole + " " + actor + " removed column: " + removedName
         ));
 
         return Map.of("message", "Column removed");
@@ -160,16 +167,30 @@ public class MarkSheetController {
         sheet.setLastUpdatedBy(updatedBy);
         repo.save(sheet);
 
-        // ✅ SAVE HISTORY
+        // ✅ Convert studentId -> student username
+        String studentUsername = studentRepo.findById(req.getStudentId().trim())
+                .map(s -> s.getUsername())
+                .orElse(req.getStudentId());
+
+        // ✅ Convert columnKey -> column name
+        String columnName = sheet.getColumns().stream()
+                .filter(col -> col.getKey().equals(req.getColumnKey().trim()))
+                .map(MarkSheet.MarkColumn::getName)
+                .findFirst()
+                .orElse(req.getColumnKey());
+
+        // ✅ SAVE HISTORY (teacher username + student username + column name + marks)
+        String actorRole = updatedBy.equalsIgnoreCase("ADMIN") ? "ADMIN" : "TEACHER";
         historyRepo.save(new ChangeLog(
                 updatedBy,
-                updatedBy.equalsIgnoreCase("ADMIN") ? "ADMIN" : "TEACHER",
+                actorRole,
                 "MARK_SHEET",
                 sheetKey(grade, c, t),
                 "UPDATE_MARK",
-                "Updated marks: studentId=" + req.getStudentId() +
-                        " column=" + req.getColumnKey() +
-                        " value=" + req.getValue()
+                actorRole + " " + updatedBy +
+                        " updated " + columnName +
+                        " marks of student " + studentUsername +
+                        " to " + req.getValue()
         ));
 
         return Map.of("message", "Saved");

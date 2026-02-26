@@ -12,6 +12,8 @@ export default function StaffTermPage() {
   const teacherUsername = localStorage.getItem("teacherUsername") || "";
   const updatedBy = role === "ADMIN" ? "ADMIN" : teacherUsername;
 
+  const isAdmin = role === "ADMIN";
+
   const [students, setStudents] = useState([]);
   const [columns, setColumns] = useState([]); // [{key,name}]
   const [marks, setMarks] = useState({});     // marks[studentId][colKey] = value
@@ -28,7 +30,6 @@ export default function StaffTermPage() {
     return (t.split("-")[0] || "").toUpperCase();
   }, [term]);
 
-  // ✅ must be AFTER classLetter is defined
   const entityKey = `G${grade}-${classLetter}-${term}`;
 
   const loadStudents = async () => {
@@ -67,6 +68,11 @@ export default function StaffTermPage() {
   }, [grade, term]);
 
   const addColumn = async () => {
+    if (isAdmin) {
+      setErr("Admin cannot add/update subjects or marks.");
+      return;
+    }
+
     const name = window.prompt("Enter column name (ex: Maths / English / Quiz 1):");
     if (!name || !name.trim()) return;
 
@@ -84,14 +90,19 @@ export default function StaffTermPage() {
   };
 
   const removeColumn = async (colKey) => {
+    if (isAdmin) {
+      setErr("Admin cannot add/update subjects or marks.");
+      return;
+    }
+
     const ok = window.confirm("Remove this column for everyone?");
     if (!ok) return;
 
     try {
       setErr("");
       await api.delete(
-  `/api/mark-sheets/columns/${colKey}?grade=${grade}&classRoom=${classLetter}&term=${term}&updatedBy=${updatedBy}`
-);
+        `/api/mark-sheets/columns/${colKey}?grade=${grade}&classRoom=${classLetter}&term=${term}&updatedBy=${updatedBy}`
+      );
       await loadSheet();
     } catch (e) {
       const m = e?.response?.data?.message || e?.response?.data || "Remove failed";
@@ -114,6 +125,11 @@ export default function StaffTermPage() {
   };
 
   const saveCell = async (studentId, colKey) => {
+    if (isAdmin) {
+      setErr("Admin cannot add/update subjects or marks.");
+      return;
+    }
+
     const v = getCellValue(studentId, colKey);
 
     if (v === "" || v === null || v === undefined) {
@@ -151,7 +167,8 @@ export default function StaffTermPage() {
         {/* Header */}
         <div className="flex items-start md:items-center justify-between gap-3 flex-wrap">
           <div className="flex flex-col gap-2">
-            {role === "ADMIN" && (
+            {/* Admin can see history */}
+            {isAdmin && (
               <button
                 type="button"
                 onClick={() => setHistoryOpen(true)}
@@ -175,8 +192,14 @@ export default function StaffTermPage() {
                 Grade {grade} — {term}
               </h2>
               <p className="text-gray-600 mt-1">
-                Class <b>{classLetter}</b> | Shared mark sheet (Admin + all Teachers)
+                Class <b>{classLetter}</b> | Shared mark sheet
               </p>
+
+              {isAdmin && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Admin mode: view-only (cannot change subjects/marks)
+                </p>
+              )}
             </div>
           </div>
 
@@ -188,6 +211,7 @@ export default function StaffTermPage() {
             >
               Back to Terms
             </button>
+
             <button
               type="button"
               onClick={refreshAll}
@@ -196,14 +220,17 @@ export default function StaffTermPage() {
               Refresh
             </button>
 
-            <button
-              type="button"
-              onClick={addColumn}
-              className="px-4 py-2 rounded-xl bg-black text-white hover:opacity-90 inline-flex items-center gap-2"
-              title="Add a new column"
-            >
-              <FiPlus /> Add Column
-            </button>
+            {/* Teachers only */}
+            {!isAdmin && (
+              <button
+                type="button"
+                onClick={addColumn}
+                className="px-4 py-2 rounded-xl bg-black text-white hover:opacity-90 inline-flex items-center gap-2"
+                title="Add a new column"
+              >
+                <FiPlus /> Add Column
+              </button>
+            )}
           </div>
         </div>
 
@@ -228,14 +255,18 @@ export default function StaffTermPage() {
                     <th key={c.key} className="p-3 min-w-[170px]">
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-semibold">{c.name}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeColumn(c.key)}
-                          className="text-gray-600 hover:text-red-600"
-                          title="Remove column"
-                        >
-                          <FiTrash2 />
-                        </button>
+
+                        {/* Teachers only: remove column */}
+                        {!isAdmin && (
+                          <button
+                            type="button"
+                            onClick={() => removeColumn(c.key)}
+                            className="text-gray-600 hover:text-red-600"
+                            title="Remove column"
+                          >
+                            <FiTrash2 />
+                          </button>
+                        )}
                       </div>
                     </th>
                   ))}
@@ -266,20 +297,25 @@ export default function StaffTermPage() {
                               <input
                                 value={val}
                                 onChange={(e) => setCellValue(s.id, c.key, e.target.value)}
-                                className="w-24 px-3 py-2 border rounded-xl"
+                                className="w-24 px-3 py-2 border rounded-xl disabled:bg-gray-100"
                                 placeholder="0-100"
                                 type="number"
                                 min="0"
                                 max="100"
+                                disabled={isAdmin} // ✅ admin cannot edit
                               />
-                              <button
-                                type="button"
-                                onClick={() => saveCell(s.id, c.key)}
-                                disabled={savingCell === cellKey}
-                                className="px-3 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 disabled:opacity-60"
-                              >
-                                {savingCell === cellKey ? "..." : "Save"}
-                              </button>
+
+                              {/* Teachers only */}
+                              {!isAdmin && (
+                                <button
+                                  type="button"
+                                  onClick={() => saveCell(s.id, c.key)}
+                                  disabled={savingCell === cellKey}
+                                  className="px-3 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 disabled:opacity-60"
+                                >
+                                  {savingCell === cellKey ? "..." : "Save"}
+                                </button>
+                              )}
                             </div>
                           </td>
                         );
@@ -290,11 +326,9 @@ export default function StaffTermPage() {
               </tbody>
             </table>
           </div>
-
-          {/* ✅ Teacher cannot remove students: there is no delete student button anywhere */}
         </div>
 
-        {/* ✅ Change History Modal (Admin only) */}
+        {/* Change History Modal */}
         <ChangeHistoryModal
           open={historyOpen}
           onClose={() => setHistoryOpen(false)}

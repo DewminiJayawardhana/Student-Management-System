@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -15,58 +16,70 @@ import java.util.Map;
 @CrossOrigin
 public class StudentViewController {
 
-    private final MarkSheetRepository sheetRepo;
     private final StudentRepository studentRepo;
+    private final MarkSheetRepository sheetRepo;
 
-    public StudentViewController(MarkSheetRepository sheetRepo,
-                                 StudentRepository studentRepo) {
-        this.sheetRepo = sheetRepo;
+    public StudentViewController(StudentRepository studentRepo, MarkSheetRepository sheetRepo) {
         this.studentRepo = studentRepo;
+        this.sheetRepo = sheetRepo;
     }
 
     @GetMapping("/mark-sheet")
-    public Map<String, Object> viewMarkSheet(
+    public Map<String, Object> getMyMarkSheet(
             @RequestHeader("X-Student-Id") String studentId,
             @RequestParam Integer grade,
             @RequestParam String classRoom,
             @RequestParam String term
     ) {
         if (studentId == null || studentId.trim().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing session");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing student session.");
         }
 
-        Student student = studentRepo.findById(studentId.trim())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Student not found"));
+        Student me = studentRepo.findById(studentId.trim())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Student not found."));
 
-        int reqGrade = (grade == null) ? -1 : grade;
-
-        // ✅ SECURITY CHECK: student can only view their own grade & class
-        if (student.getGrade() != reqGrade ||
-                !student.getClassRoom().equalsIgnoreCase(classRoom.trim())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+        // ✅ allow only grade history (<= current grade)
+        if (grade == null || grade < 1 || grade > me.getGrade()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only view your current or previous grades.");
         }
 
-        MarkSheet sheet = sheetRepo
-                .findByGradeAndClassRoomAndTerm(
-                        reqGrade,
-                        classRoom.trim().toUpperCase(),
-                        term.trim()
-                )
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Mark sheet not found"));
+        String myRoom = (me.getClassRoom() == null) ? "" : me.getClassRoom().trim().toUpperCase();
+        String reqRoom = (classRoom == null) ? "" : classRoom.trim().toUpperCase();
+        String reqTerm = (term == null) ? "" : term.trim();
 
-        Map<String, Integer> studentMarks =
-                sheet.getMarks().getOrDefault(studentId.trim(), Map.of());
+        // ✅ force same class room
+        if (!reqRoom.equals(myRoom)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only view your own class room.");
+        }
+
+        // ✅ simple validation: term must start with A-/B-/C-
+        if (!reqTerm.toUpperCase().startsWith(myRoom + "-")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid term for your class room.");
+        }
+
+        MarkSheet sheet = sheetRepo.findByGradeAndClassRoomAndTerm(grade, reqRoom, reqTerm)
+                .orElseGet(() -> {
+                    MarkSheet s = new MarkSheet();
+                    s.setGrade(grade);
+                    s.setClassRoom(reqRoom);
+                    s.setTerm(reqTerm);
+                    return sheetRepo.save(s);
+                });
+
+        // ✅ only my marks row
+        Map<String, Integer> myMarks = sheet.getMarks().getOrDefault(me.getId(), Map.of());
+        List<MarkSheet.MarkColumn> cols = sheet.getColumns();
 
         return Map.of(
                 "student", Map.of(
-                        "id", student.getId(),
-                        "name", student.getName(),
-                        "username", student.getUsername(),
-                        "grade", student.getGrade(),
-                        "classRoom", student.getClassRoom()
+                        "id", me.getId(),
+                        "username", me.getUsername(),
+                        "name", me.getName(),
+                        "grade", me.getGrade(),
+                        "classRoom", me.getClassRoom()
                 ),
-                "columns", sheet.getColumns(),
-                "marks", studentMarks
+                "columns", cols,
+                "marks", myMarks
         );
     }
 }

@@ -24,7 +24,7 @@ export default function StudentAccountPage() {
         setErr("");
         const res = await api.get("/api/student-account/me");
         setMe(res.data);
-        setActiveGrade(res.data.grade); // ✅ default to own grade
+        setActiveGrade(res.data.grade); // default to current grade
       } catch (e) {
         setErr("Cannot load account. Please login again.");
       } finally {
@@ -34,14 +34,18 @@ export default function StudentAccountPage() {
     load();
   }, []);
 
-  const isMyGrade = (g) => me && Number(me.grade) === Number(g);
+  // ✅ Allow viewing current grade + previous grades
+  const canOpenGrade = (g) => {
+    if (!me) return false;
+    return Number(g) <= Number(me.grade);
+  };
 
   const openTerm = (g, term) => {
-    if (!isMyGrade(g)) return;
+    if (!canOpenGrade(g)) return;
     navigate(`/student/staff/grade/${g}/term/${term}`);
   };
 
-  // ✅ LOGOUT FUNCTION (NEW)
+  // ✅ Logout
   const handleLogout = () => {
     localStorage.removeItem("studentLoggedIn");
     localStorage.removeItem("studentId");
@@ -53,6 +57,8 @@ export default function StudentAccountPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
+
+        {/* Header */}
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
             <h2 className="text-2xl font-bold text-gray-800">My Account</h2>
@@ -61,17 +67,13 @@ export default function StudentAccountPage() {
 
             {me && (
               <div className="mt-3 text-gray-700">
-                <p>
-                  <b>Full Name:</b> {me.name}
-                </p>
-                <p>
-                  <b>Username:</b> {me.username}
-                </p>
+                <p><b>Full Name:</b> {me.name}</p>
+                <p><b>Username:</b> {me.username}</p>
+                <p><b>Current Grade:</b> {me.grade}</p>
               </div>
             )}
           </div>
 
-          {/* ✅ LOGOUT BUTTON (NEW) */}
           <button
             onClick={handleLogout}
             className="px-4 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 transition"
@@ -85,7 +87,8 @@ export default function StudentAccountPage() {
           <p className="font-semibold text-gray-800 mb-3">Grades</p>
           <div className="flex flex-wrap gap-2">
             {grades.map((g) => {
-              const enabled = isMyGrade(g);
+              const enabled = canOpenGrade(g);
+
               return (
                 <button
                   key={g}
@@ -93,7 +96,7 @@ export default function StudentAccountPage() {
                   className={`px-4 py-2 rounded-xl border text-sm font-semibold
                     ${activeGrade === g ? "bg-black text-white" : "bg-white"}
                     ${enabled ? "hover:bg-gray-100" : "opacity-40 cursor-not-allowed"}`}
-                  title={enabled ? "" : "You can only access your own grade"}
+                  title={enabled ? "" : "You cannot access future grades"}
                 >
                   Grade {g}
                 </button>
@@ -107,16 +110,19 @@ export default function StudentAccountPage() {
           <h3 className="text-lg font-bold text-gray-800">
             Grade {activeGrade} Terms
           </h3>
+
           <p className="text-gray-500 text-sm mt-1">
             Select your class-term to view your marks (read-only)
           </p>
 
-          {!isMyGrade(activeGrade) ? (
-            <p className="mt-4 text-sm text-red-600">You cannot open other grades.</p>
+          {!canOpenGrade(activeGrade) ? (
+            <p className="mt-4 text-sm text-red-600">
+              You cannot open future grades.
+            </p>
           ) : (
             <div className="mt-4">
               {(() => {
-                const room = (me?.classRoom || "").toUpperCase(); // A/B/C
+                const room = (me?.classRoom || "").toUpperCase();
                 const items = TERMS[room] || [];
 
                 if (!room || items.length === 0) {

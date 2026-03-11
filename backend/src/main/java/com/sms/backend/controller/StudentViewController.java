@@ -38,7 +38,7 @@ public class StudentViewController {
         Student me = studentRepo.findById(studentId.trim())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Student not found."));
 
-        // ✅ allow only grade history (<= current grade)
+        //allow only grade history (<= current grade)
         if (grade == null || grade < 1 || grade > me.getGrade()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only view your current or previous grades.");
         }
@@ -47,12 +47,12 @@ public class StudentViewController {
         String reqRoom = (classRoom == null) ? "" : classRoom.trim().toUpperCase();
         String reqTerm = (term == null) ? "" : term.trim();
 
-        // ✅ force same class room
+        //force same class room
         if (!reqRoom.equals(myRoom)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only view your own class room.");
         }
 
-        // ✅ simple validation: term must start with A-/B-/C-
+        //simple validation: term must start with A-/B-/C-
         if (!reqTerm.toUpperCase().startsWith(myRoom + "-")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid term for your class room.");
         }
@@ -66,7 +66,7 @@ public class StudentViewController {
                     return sheetRepo.save(s);
                 });
 
-        // ✅ only my marks row
+        //only my marks row
         Map<String, Integer> myMarks = sheet.getMarks().getOrDefault(me.getId(), Map.of());
         List<MarkSheet.MarkColumn> cols = sheet.getColumns();
 

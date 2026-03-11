@@ -4,7 +4,7 @@ public class UpdateMarkRequest {
     private String studentId;
     private String columnKey;
     private Integer value;     // 0-100
-    private String updatedBy;  // optional (teacher/admin username)
+    private String updatedBy;  
 
     public UpdateMarkRequest() {}
 

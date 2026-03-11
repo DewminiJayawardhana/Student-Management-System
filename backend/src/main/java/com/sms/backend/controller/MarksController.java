@@ -22,7 +22,7 @@ public class MarksController {
         this.repo = repo;
     }
 
-    // ✅ Get marks for a class+term+subject
+    //Get marks for a class+term+subject
     @GetMapping
     public List<StudentMark> list(
             @RequestParam Integer grade,
@@ -38,7 +38,7 @@ public class MarksController {
         );
     }
 
-    // ✅ Save/Update one mark (UPSERT)
+    //Save/Update one mark (UPSERT)
     @PutMapping
     public ResponseEntity<?> save(@RequestBody SaveMarkRequest req) {
         if (req.getStudentId() == null || req.getGrade() == null ||

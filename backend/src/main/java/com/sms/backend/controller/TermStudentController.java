@@ -19,13 +19,13 @@ public class TermStudentController {
         this.repo = repo;
     }
 
-    // ✅ list by grade+term
+    // list by grade+term
     @GetMapping
     public List<TermStudent> list(@RequestParam Integer grade, @RequestParam String term) {
         return repo.findByGradeAndTermOrderByNameAsc(grade, term);
     }
 
-    // ✅ add
+    // add
     @PostMapping
     public TermStudent add(@RequestBody TermStudent s) {
         if (s.getGrade() == null || s.getTerm() == null || s.getName() == null || s.getUsername() == null)
@@ -41,7 +41,7 @@ public class TermStudentController {
         return repo.save(s);
     }
 
-    // ✅ update
+    //  update
     @PutMapping("/{id}")
     public TermStudent update(@PathVariable String id, @RequestBody TermStudent s) {
         TermStudent ex = repo.findById(id)
@@ -53,7 +53,7 @@ public class TermStudentController {
         return repo.save(ex);
     }
 
-    // ✅ delete
+    //  delete
     @DeleteMapping("/{id}")
     public void delete(@PathVariable String id) {
         repo.deleteById(id);

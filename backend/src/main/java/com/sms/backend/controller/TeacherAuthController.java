@@ -31,7 +31,7 @@ public class TeacherAuthController {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // ✅ REGISTER (pre-approved by admin)
+    //REGISTER (pre-approved by admin)
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterTeacherRequest req) {
 
@@ -68,7 +68,7 @@ public class TeacherAuthController {
         return ResponseEntity.ok(Map.of("message", "Registration successful. Please login."));
     }
 
-    // ✅ LOGIN (teacher)
+    //LOGIN (teacher)
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody TeacherLoginRequest req) {
 
@@ -91,7 +91,7 @@ public class TeacherAuthController {
                 "username", user.getUsername()
         ));
     }
-    // ✅ GET teacher profile by username (read-only)
+    //GET teacher profile by username (read-only)
 @GetMapping("/me/{username}")
 public ResponseEntity<?> me(@PathVariable String username) {
     TeacherUser user = teacherUserRepo.findByUsername(username.trim())
@@ -106,7 +106,7 @@ public ResponseEntity<?> me(@PathVariable String username) {
     ));
 }
 
-// ✅ UPDATE teacher profile (username NOT editable)
+//UPDATE teacher profile (username NOT editable)
 @PutMapping("/me/{username}")
 public ResponseEntity<?> updateMe(@PathVariable String username,
                                  @RequestBody UpdateTeacherProfileRequest req) {

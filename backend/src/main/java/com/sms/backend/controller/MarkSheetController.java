@@ -21,7 +21,7 @@ public class MarkSheetController {
 
     private final MarkSheetRepository repo;
     private final ChangeLogRepository historyRepo;
-    private final StudentRepository studentRepo; // ✅ NEW
+    private final StudentRepository studentRepo; //NEW
 
     public MarkSheetController(MarkSheetRepository repo,
                                ChangeLogRepository historyRepo,
@@ -32,7 +32,7 @@ public class MarkSheetController {
     }
 
     private String sheetKey(Integer grade, String classRoom, String term) {
-        return "G" + grade + "-" + classRoom + "-" + term; // ✅ G2-A-A-I
+        return "G" + grade + "-" + classRoom + "-" + term; //G2-A-A-I
     }
 
     @GetMapping
@@ -85,7 +85,7 @@ public class MarkSheetController {
         sheet.setLastUpdatedBy(updatedBy);
         repo.save(sheet);
 
-        // ✅ SAVE HISTORY (include teacher/admin username)
+        //SAVE HISTORY (include teacher/admin username)
         String actorRole = updatedBy.equalsIgnoreCase("ADMIN") ? "ADMIN" : "TEACHER";
         historyRepo.save(new ChangeLog(
                 updatedBy,
@@ -125,7 +125,7 @@ public class MarkSheetController {
         sheet.setLastUpdatedBy(actor);
         repo.save(sheet);
 
-        // ✅ SAVE HISTORY (include teacher/admin username)
+        //SAVE HISTORY (include teacher/admin username)
         String actorRole = actor.equalsIgnoreCase("ADMIN") ? "ADMIN" : "TEACHER";
         historyRepo.save(new ChangeLog(
                 actor,
@@ -167,19 +167,19 @@ public class MarkSheetController {
         sheet.setLastUpdatedBy(updatedBy);
         repo.save(sheet);
 
-        // ✅ Convert studentId -> student username
+        //Convert studentId -> student username
         String studentUsername = studentRepo.findById(req.getStudentId().trim())
                 .map(s -> s.getUsername())
                 .orElse(req.getStudentId());
 
-        // ✅ Convert columnKey -> column name
+        //Convert columnKey -> column name
         String columnName = sheet.getColumns().stream()
                 .filter(col -> col.getKey().equals(req.getColumnKey().trim()))
                 .map(MarkSheet.MarkColumn::getName)
                 .findFirst()
                 .orElse(req.getColumnKey());
 
-        // ✅ SAVE HISTORY (teacher username + student username + column name + marks)
+        //SAVE HISTORY (teacher username + student username + column name + marks)
         String actorRole = updatedBy.equalsIgnoreCase("ADMIN") ? "ADMIN" : "TEACHER";
         historyRepo.save(new ChangeLog(
                 updatedBy,

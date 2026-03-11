@@ -31,7 +31,7 @@ public class StudentAuthController {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // ✅ REGISTER
+    //REGISTER
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterStudentRequest req) {
 
@@ -70,7 +70,7 @@ public class StudentAuthController {
         return ResponseEntity.ok(Map.of("message", "Registration successful. Please login."));
     }
 
-    // ✅ LOGIN
+    //LOGIN
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody StudentLoginRequest req) {
         String username = req.getUsername() == null ? "" : req.getUsername().trim();
@@ -107,55 +107,3 @@ public class StudentAuthController {
 }
 
 
-/*package com.sms.backend.controller;
-
-import com.sms.backend.DTO.RegisterStudentRequest;
-import com.sms.backend.model.Student;
-import com.sms.backend.repository.StudentRepository;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.util.Map;
-
-@RestController
-@RequestMapping("/api/student-auth")
-@CrossOrigin
-public class StudentAuthController {
-
-    private final StudentRepository studentRepo;
-
-    public StudentAuthController(StudentRepository studentRepo) {
-        this.studentRepo = studentRepo;
-    }
-
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterStudentRequest req) {
-
-        String username = (req.getUsername() == null) ? "" : req.getUsername().trim();
-        String name = (req.getName() == null) ? "" : req.getName().trim();
-
-        if (username.isEmpty() || name.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name and Username are required.");
-        }
-
-        // 1) username must exist in admin-added list
-        Student approved = studentRepo.findByUsername(username)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Username not found. Contact admin."
-                ));
-
-        // 2) already registered?
-        if (approved.isRegistered()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This username is already registered.");
-        }
-
-        // 3) mark registered + (optional) update name
-        approved.setName(name);
-        approved.setRegistered(true);
-        studentRepo.save(approved);
-
-        return ResponseEntity.ok(Map.of("message", "Registration successful. Please login."));
-    }
-}*/

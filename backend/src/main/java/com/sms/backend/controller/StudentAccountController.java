@@ -21,7 +21,7 @@ public class StudentAccountController {
     }
 
    
-    // ✅ ME (fetch profile from DB) - STRICT: uses header X-Student-Id
+    //ME (fetch profile from DB) - STRICT: uses header X-Student-Id
     @GetMapping("/me")
     public Map<String, Object> me(@RequestHeader("X-Student-Id") String studentId) {
         if (studentId == null || studentId.trim().isEmpty()) {

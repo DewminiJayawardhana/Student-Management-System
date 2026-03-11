@@ -4,8 +4,7 @@ public class UpdateTeacherProfileRequest {
     private String name;
     private String subject;
     private String email;
-    private String password; // optional
-
+    private String password; 
     public UpdateTeacherProfileRequest() {}
 
     public String getName() { return name; }

@@ -40,7 +40,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ✅ ADD THIS (needed for hashing teacher passwords)
+    //ADD THIS (needed for hashing teacher passwords)
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

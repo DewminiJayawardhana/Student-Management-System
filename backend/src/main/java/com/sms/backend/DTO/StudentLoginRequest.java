@@ -13,13 +13,3 @@ public class StudentLoginRequest {
     public void setPassword(String password) { this.password = password; }
 }
 
-/*package com.sms.backend.DTO;
-
-public class StudentLoginRequest {
-    private String username;
-
-    public StudentLoginRequest() {}
-
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
-}*/

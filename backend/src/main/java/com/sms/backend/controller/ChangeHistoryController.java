@@ -17,7 +17,7 @@ public class ChangeHistoryController {
         this.repo = repo;
     }
 
-    // example: /api/history?entityType=MARK_SHEET&entityKey=G2-A-A-I
+    
     @GetMapping
     public List<ChangeLog> list(@RequestParam String entityType,
                                 @RequestParam String entityKey) {

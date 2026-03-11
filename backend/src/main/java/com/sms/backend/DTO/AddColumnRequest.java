@@ -2,7 +2,7 @@ package com.sms.backend.DTO;
 
 public class AddColumnRequest {
     private String name;
-    private String updatedBy; // optional (teacher/admin username)
+    private String updatedBy; 
 
     public AddColumnRequest() {}
 

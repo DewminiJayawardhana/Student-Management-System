@@ -21,7 +21,7 @@ export default function ChangeHistoryModal({ open, onClose, entityType, entityKe
 
   useEffect(() => {
     if (open) load();
-    // eslint-disable-next-line
+   
   }, [open]);
 
   if (!open) return null;
